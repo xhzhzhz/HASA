@@ -1,12 +1,66 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/auth_service.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   final VoidCallback onLogout;
+  final String username;
 
-  const ProfilePage({Key? key, required this.onLogout}) : super(key: key);
+  const ProfilePage({Key? key, required this.onLogout, required this.username})
+    : super(key: key);
+
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  Map<String, dynamic>? _admin;
+  late TextEditingController _bankController;
+  String? _photoPath;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _bankController = TextEditingController();
+    _loadAdmin();
+  }
+
+  Future<void> _loadAdmin() async {
+    final adm = await AuthService().getCurrentAdmin(widget.username);
+    if (adm != null) {
+      setState(() {
+        _admin = adm;
+        _bankController.text = adm['bankAccount'] ?? '';
+        _photoPath = adm['photoPath'];
+      });
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    final picked = await _picker.pickImage(source: ImageSource.camera);
+    if (picked != null) {
+      setState(() {
+        _photoPath = picked.path;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _bankController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_admin == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profil Akun')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Profil Akun')),
       body: SingleChildScrollView(
@@ -24,93 +78,34 @@ class ProfilePage extends StatelessWidget {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: const Color(0xFF2AA89B),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/dokter.png',
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                      backgroundImage:
+                          _photoPath != null
+                              ? FileImage(File(_photoPath!)) as ImageProvider
+                              : null,
+                      child:
+                          _photoPath == null
+                              ? const Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Colors.white,
+                              )
+                              : null,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Kader TB',
-                      style: TextStyle(
+                    Text(
+                      _admin!['username'] ?? '',
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text('email@example.com'),
-                    const SizedBox(height: 8),
-                    const Text('Puskesmas Sukajadi'),
+                    Text(_admin!['bankAccount'] ?? ''),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => AlertDialog(
-                                  title: const Text('Edit Profil'),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      TextFormField(
-                                        initialValue: 'Kader TB',
-                                        decoration: const InputDecoration(
-                                          labelText: 'Nama',
-                                          prefixIcon: Icon(Icons.person),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      TextFormField(
-                                        initialValue: 'email@example.com',
-                                        decoration: const InputDecoration(
-                                          labelText: 'Email',
-                                          prefixIcon: Icon(Icons.email),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      TextFormField(
-                                        initialValue: 'Puskesmas Sukajadi',
-                                        decoration: const InputDecoration(
-                                          labelText: 'Puskesmas',
-                                          prefixIcon: Icon(
-                                            Icons.local_hospital,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Batal'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Profil berhasil diperbarui',
-                                            ),
-                                            backgroundColor: Colors.green,
-                                          ),
-                                        );
-                                      },
-                                      child: const Text('Simpan'),
-                                    ),
-                                  ],
-                                ),
-                          );
-                        },
-
+                        onPressed: () => _showEditDialog(context),
                         icon: const Icon(Icons.edit, color: Colors.white),
                         label: const Text(
                           'Edit Profil',
@@ -159,7 +154,7 @@ class ProfilePage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: onLogout,
+                onPressed: widget.onLogout,
                 icon: const Icon(Icons.logout, color: Colors.white),
                 label: const Text(
                   'Logout',
@@ -198,6 +193,71 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Edit Profil'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  initialValue: _admin!['username'],
+                  decoration: const InputDecoration(labelText: 'Username'),
+                  onChanged: (v) => _admin!['username'] = v,
+                ),
+                TextFormField(
+                  controller: _bankController,
+                  decoration: const InputDecoration(labelText: 'No. Rekening'),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _pickPhoto,
+                      child: const Text('Ganti Foto'),
+                    ),
+                    const SizedBox(width: 10),
+                    if (_photoPath != null)
+                      Image.file(File(_photoPath!), width: 50, height: 50),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final success = await AuthService().updateProfile(
+                    id: _admin!['id'],
+                    username: _admin!['username'],
+                    bankAccount: _bankController.text,
+                    photoPath: _photoPath,
+                  );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? 'Profil berhasil diperbarui'
+                            : 'Gagal memperbarui profil',
+                      ),
+                      backgroundColor: success ? Colors.green : Colors.red,
+                    ),
+                  );
+                  if (success) setState(() {});
+                },
+                child: const Text('Simpan'),
+              ),
+            ],
+          ),
     );
   }
 }

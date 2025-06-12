@@ -31,6 +31,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  image_picker: ^1.0.4
+  crypto: ^3.0.3
+  shared_preferences: ^2.2.2
+
 # SQLite dependencies
   sqflite: ^2.3.0
   sqflite_common_ffi: ^2.3.0+2

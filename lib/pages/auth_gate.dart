@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'sign_in_page.dart';
 import 'dashboard_page.dart';
 
@@ -11,23 +12,51 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   bool _signedIn = false;
+  String? _username;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLogin();
+  }
+
+  Future<void> _checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+    setState(() {
+      _signedIn = username != null;
+      _username = username;
+      _loading = false;
+    });
+  }
+
+  void _login(String username) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', username);
+    setState(() {
+      _signedIn = true;
+      _username = username;
+    });
+  }
+
+  void _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+    setState(() {
+      _signedIn = false;
+      _username = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _signedIn
-        ? DashboardPage(onLogout: _logout)
-        : SignInPage(onSignIn: _login); // Tampilkan halaman login
-  }
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-  void _login() {
-    setState(() {
-      _signedIn = true; // Simulasikan login
-    });
-  }
-
-  void _logout() {
-    setState(() {
-      _signedIn = false; // Simulasikan logout
-    });
+    return _signedIn && _username != null
+        ? DashboardPage(onLogout: _logout, username: _username!)
+        : SignInPage(onSignIn: _login);
   }
 }

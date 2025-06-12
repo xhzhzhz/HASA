@@ -8,7 +8,13 @@ import '../services/point_service.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback onLogout;
-  const DashboardPage({Key? key, required this.onLogout}) : super(key: key);
+  final String username;
+
+  const DashboardPage({
+    Key? key,
+    required this.onLogout,
+    required this.username,
+  }) : super(key: key);
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -27,7 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
       const PatientPage(),
       const NotificationPage(),
       const RewardPage(),
-      ProfilePage(onLogout: widget.onLogout),
+      ProfilePage(onLogout: widget.onLogout, username: widget.username),
     ];
   }
 

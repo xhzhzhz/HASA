@@ -6,12 +6,12 @@ import 'package:path_provider/path_provider.dart';
 import '../models/patient.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  static final DatabaseHelper instance = DatabaseHelper._internal();
   static Database? _database;
 
   DatabaseHelper._internal();
 
-  factory DatabaseHelper() => _instance;
+  factory DatabaseHelper() => instance;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -85,6 +85,16 @@ class DatabaseHelper {
           points INTEGER DEFAULT 0,
           description TEXT,
           createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE admins(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE,
+          passwordHash TEXT,
+          bankAccount TEXT,
+          photoPath TEXT,
         )
       ''');
 
@@ -215,6 +225,27 @@ class DatabaseHelper {
       print('Error getting total points: $e');
       return 0;
     }
+  }
+
+  Future<int> insertAdmin(Map<String, dynamic> admin) async {
+    final db = await database;
+    return await db.insert('admins', admin);
+  }
+
+  Future<Map<String, dynamic>?> getAdminByUsername(String username) async {
+    final db = await database;
+    final res = await db.query(
+      'admins',
+      where: 'username = ?',
+      whereArgs: [username],
+      limit: 1,
+    );
+    return res.isNotEmpty ? res.first : null;
+  }
+
+  Future<int> updateAdmin(int id, Map<String, dynamic> data) async {
+    final db = await database;
+    return await db.update('admins', data, where: 'id = ?', whereArgs: [id]);
   }
 
   // Utility methods

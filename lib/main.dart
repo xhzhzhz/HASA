@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'pages/auth_gate.dart';
 import 'dart:io' show Platform;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'services/db_helper.dart';
+import 'pages/auth_gate.dart';
 
 void main() async {
-  // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize database factory for desktop platforms only
-  // Skip platform check for web
   if (!kIsWeb) {
     try {
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -22,17 +19,15 @@ void main() async {
     }
   }
 
-  // Initialize database
   try {
     final dbHelper = DatabaseHelper();
-    await dbHelper
-        .database; // This will create the database if it doesn't exist
+    await dbHelper.database;
     print('Database initialized successfully');
   } catch (e) {
     print('Error initializing database: $e');
   }
 
-  runApp(const HASAApp()); // Changed from MyApp() to HASAApp()
+  runApp(const HASAApp());
 }
 
 class HASAApp extends StatelessWidget {
