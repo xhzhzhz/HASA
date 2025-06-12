@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/patient.dart';
 import '../services/point_service.dart';
 import '../services/patient_service.dart';
-import '../services/db_helper.dart';
 
 class PatientPage extends StatefulWidget {
   const PatientPage({Key? key}) : super(key: key);
@@ -29,6 +28,14 @@ class _PatientPageState extends State<PatientPage> {
       setState(() {});
     } catch (e) {
       print('Error loading patients: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data pasien: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       _patients = [];
       setState(() {});
     }
@@ -113,7 +120,7 @@ class _PatientPageState extends State<PatientPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Cari pasien...',
+                hintText: 'Cari pasien (nama/NIK)...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -156,7 +163,6 @@ class _PatientPageState extends State<PatientPage> {
                       itemCount: filteredPatients.length,
                       itemBuilder: (c, i) {
                         final p = filteredPatients[i];
-                        final originalIndex = _patients.indexOf(p);
                         return Card(
                           margin: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -229,20 +235,14 @@ class _PatientPageState extends State<PatientPage> {
                 onPressed: () async {
                   Navigator.pop(context);
                   try {
-                    // 1. Ubah status dan simpan ke database
                     patient.isPemeriksaanSelesai = true;
                     await PatientService().update(patient);
-
-                    // 2. Tambah poin
                     _pointService.addPoints(
                       10,
                       'Pemeriksaan pasien ${patient.nama}',
                     );
-
-                    // 3. Reload daftar pasien
                     await _loadPatients();
 
-                    // 4. Tampilkan Snackbar
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -328,6 +328,7 @@ class _PatientPageState extends State<PatientPage> {
       builder:
           (_) => StatefulBuilder(
             builder: (context, setStateDialog) {
+              // Konten dialog sama persis seperti sebelumnya
               return AlertDialog(
                 title: const Text('Tambah Pasien'),
                 content: SingleChildScrollView(
@@ -342,12 +343,11 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Nama',
                             prefixIcon: Icon(Icons.person),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Nama tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Nama tidak boleh kosong'
+                                      : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -356,12 +356,11 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'NIK',
                             prefixIcon: Icon(Icons.badge),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'NIK tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'NIK tidak boleh kosong'
+                                      : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -371,12 +370,11 @@ class _PatientPageState extends State<PatientPage> {
                             prefixIcon: Icon(Icons.cake),
                           ),
                           keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Umur tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Umur tidak boleh kosong'
+                                      : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -385,12 +383,11 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Alamat',
                             prefixIcon: Icon(Icons.home),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Alamat tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Alamat tidak boleh kosong'
+                                      : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -399,12 +396,11 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Kontak Serumah',
                             prefixIcon: Icon(Icons.phone),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Kontak tidak boleh kosong';
-                            }
-                            return null;
-                          },
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Kontak tidak boleh kosong'
+                                      : null,
                         ),
                         const SizedBox(height: 16),
                         InkWell(
@@ -416,9 +412,7 @@ class _PatientPageState extends State<PatientPage> {
                               lastDate: DateTime.now(),
                             );
                             if (selectedDate != null) {
-                              setStateDialog(() {
-                                tanggal = selectedDate;
-                              });
+                              setStateDialog(() => tanggal = selectedDate);
                             }
                           },
                           child: Container(
@@ -455,9 +449,8 @@ class _PatientPageState extends State<PatientPage> {
                           (k) => CheckboxListTile(
                             title: Text(k),
                             value: gejala[k],
-                            onChanged: (v) {
-                              setStateDialog(() => gejala[k] = v!);
-                            },
+                            onChanged:
+                                (v) => setStateDialog(() => gejala[k] = v!),
                             contentPadding: EdgeInsets.zero,
                             dense: true,
                           ),
@@ -471,9 +464,8 @@ class _PatientPageState extends State<PatientPage> {
                           (k) => CheckboxListTile(
                             title: Text(k),
                             value: risiko[k],
-                            onChanged: (v) {
-                              setStateDialog(() => risiko[k] = v!);
-                            },
+                            onChanged:
+                                (v) => setStateDialog(() => risiko[k] = v!),
                             contentPadding: EdgeInsets.zero,
                             dense: true,
                           ),
@@ -501,22 +493,13 @@ class _PatientPageState extends State<PatientPage> {
                             gejala: gejala,
                             risiko: risiko,
                           );
-
-                          // Simpan ke SQLite
                           await PatientService().insert(newPatient);
-
-                          // Reload dari database
-                          await _loadPatients();
-
-                          // Tambah poin
                           _pointService.addPoints(
                             10,
                             'Pendaftaran pasien ${ctrlNama.text}',
                           );
-
+                          await _loadPatients();
                           Navigator.pop(context);
-
-                          // Show success snackbar
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -577,18 +560,305 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
+  void _editPatient(Patient patientToEdit) {
+    // Fungsi ini tidak berubah dari sebelumnya
+    final formKey = GlobalKey<FormState>();
+    final ctrlNama = TextEditingController(text: patientToEdit.nama);
+    final ctrlNik = TextEditingController(text: patientToEdit.nik);
+    final ctrlUmur = TextEditingController(text: patientToEdit.umur);
+    final ctrlAlamat = TextEditingController(text: patientToEdit.alamat);
+    final ctrlKontak = TextEditingController(text: patientToEdit.kontak);
+    DateTime? tanggal = patientToEdit.tanggal;
+    Map<String, bool> gejala = Map.from(patientToEdit.gejala);
+    Map<String, bool> risiko = Map.from(patientToEdit.risiko);
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => StatefulBuilder(
+            builder: (context, setStateDialog) {
+              // Konten dialog sama persis seperti _addPatient, hanya judul dan tombol Simpan yang berbeda
+              return AlertDialog(
+                title: const Text('Edit Pasien'),
+                content: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextFormField(
+                          controller: ctrlNama,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama',
+                            prefixIcon: Icon(Icons.person),
+                          ),
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Nama tidak boleh kosong'
+                                      : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: ctrlNik,
+                          decoration: const InputDecoration(
+                            labelText: 'NIK',
+                            prefixIcon: Icon(Icons.badge),
+                          ),
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'NIK tidak boleh kosong'
+                                      : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: ctrlUmur,
+                          decoration: const InputDecoration(
+                            labelText: 'Umur',
+                            prefixIcon: Icon(Icons.cake),
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Umur tidak boleh kosong'
+                                      : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: ctrlAlamat,
+                          decoration: const InputDecoration(
+                            labelText: 'Alamat',
+                            prefixIcon: Icon(Icons.home),
+                          ),
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Alamat tidak boleh kosong'
+                                      : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: ctrlKontak,
+                          decoration: const InputDecoration(
+                            labelText: 'Kontak Serumah',
+                            prefixIcon: Icon(Icons.phone),
+                          ),
+                          validator:
+                              (v) =>
+                                  v == null || v.isEmpty
+                                      ? 'Kontak tidak boleh kosong'
+                                      : null,
+                        ),
+                        const SizedBox(height: 16),
+                        InkWell(
+                          onTap: () async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: tanggal ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (selectedDate != null) {
+                              setStateDialog(() => tanggal = selectedDate);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade400),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    tanggal == null
+                                        ? 'Pilih Tanggal Investigasi'
+                                        : 'Tanggal: ${tanggal!.day}/${tanggal!.month}/${tanggal!.year}',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        const Text(
+                          'Gejala',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        ...gejala.keys.map(
+                          (k) => CheckboxListTile(
+                            title: Text(k),
+                            value: gejala[k],
+                            onChanged:
+                                (v) => setStateDialog(() => gejala[k] = v!),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ),
+                        const Divider(),
+                        const Text(
+                          'Faktor Risiko',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        ...risiko.keys.map(
+                          (k) => CheckboxListTile(
+                            title: Text(k),
+                            value: risiko[k],
+                            onChanged:
+                                (v) => setStateDialog(() => risiko[k] = v!),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Batal'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (formKey.currentState!.validate() && tanggal != null) {
+                        try {
+                          final updatedPatient = Patient(
+                            id: patientToEdit.id,
+                            nama: ctrlNama.text,
+                            nik: ctrlNik.text,
+                            umur: ctrlUmur.text,
+                            alamat: ctrlAlamat.text,
+                            kontak: ctrlKontak.text,
+                            tanggal: tanggal!,
+                            gejala: gejala,
+                            risiko: risiko,
+                            isPemeriksaanSelesai:
+                                patientToEdit.isPemeriksaanSelesai,
+                          );
+                          await PatientService().update(updatedPatient);
+                          await _loadPatients();
+                          Navigator.pop(context);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Berhasil memperbarui data pasien',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    child: const Text('Simpan Perubahan'),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
+  }
+
+  // ===================================================================
+  // == FUNGSI BARU UNTUK KONFIRMASI HAPUS ==
+  // ===================================================================
+  void _showDeleteConfirmation(BuildContext detailContext, Patient patient) {
+    showDialog(
+      context: detailContext,
+      builder:
+          (BuildContext confirmationContext) => AlertDialog(
+            title: const Text('Konfirmasi Hapus'),
+            content: Text(
+              'Anda yakin ingin menghapus data pasien ${patient.nama}? Tindakan ini tidak dapat dibatalkan.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(confirmationContext),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  try {
+                    // Pastikan patient.id tidak null
+                    if (patient.id == null) {
+                      throw Exception("ID pasien tidak ditemukan.");
+                    }
+
+                    await PatientService().delete(patient.id!);
+
+                    // Tutup dialog konfirmasi & dialog detail
+                    Navigator.pop(confirmationContext);
+                    Navigator.pop(detailContext);
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Data pasien ${patient.nama} berhasil dihapus.',
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                    // Muat ulang daftar pasien
+                    await _loadPatients();
+                  } catch (e) {
+                    if (mounted) {
+                      Navigator.pop(confirmationContext);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Gagal menghapus data: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Hapus'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // ===================================================================
+  // == FUNGSI _showDetail YANG SUDAH DIMODIFIKASI DENGAN TOMBOL HAPUS ==
+  // ===================================================================
   void _showDetail(Patient p) {
     showDialog(
       context: context,
       builder:
-          (_) => AlertDialog(
+          (BuildContext detailDialogContext) => AlertDialog(
             contentPadding: EdgeInsets.zero,
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -647,8 +917,6 @@ class _PatientPageState extends State<PatientPage> {
                       ],
                     ),
                   ),
-
-                  // Detail content
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -662,11 +930,8 @@ class _PatientPageState extends State<PatientPage> {
                           'Tanggal Investigasi',
                           '${p.tanggal.day}/${p.tanggal.month}/${p.tanggal.year}',
                         ),
-
                         const SizedBox(height: 16),
                         const Divider(),
-
-                        // Gejala
                         const Text(
                           'Gejala:',
                           style: TextStyle(
@@ -683,11 +948,8 @@ class _PatientPageState extends State<PatientPage> {
                                   .map((e) => _buildChip(e.key, e.value))
                                   .toList(),
                         ),
-
                         const SizedBox(height: 16),
                         const Divider(),
-
-                        // Faktor Risiko
                         const Text(
                           'Faktor Risiko:',
                           style: TextStyle(
@@ -711,14 +973,33 @@ class _PatientPageState extends State<PatientPage> {
               ),
             ),
             actions: [
+              // TOMBOL HAPUS BARU
+              IconButton(
+                icon: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                tooltip: 'Hapus Pasien',
+                onPressed: () {
+                  _showDeleteConfirmation(detailDialogContext, p);
+                },
+              ),
+              const Spacer(), // Mendorong tombol lain ke kanan
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(detailDialogContext);
+                  _editPatient(p);
+                },
+                child: const Text('Edit'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(detailDialogContext),
                 child: const Text('Tutup'),
               ),
               if (!p.isPemeriksaanSelesai)
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(detailDialogContext);
                     _togglePemeriksaan(p);
                   },
                   child: const Text('Tandai Selesai'),
@@ -736,15 +1017,20 @@ class _PatientPageState extends State<PatientPage> {
         children: [
           Icon(icon, size: 18, color: Colors.grey),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
         ],
       ),
