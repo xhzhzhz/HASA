@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/patient.dart';
+import '../models/withdrawal.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._internal();
@@ -65,10 +66,10 @@ class DatabaseHelper {
         CREATE TABLE patients (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           nama TEXT NOT NULL,
-          nik TEXT NOT NULL UNIQUE,
-          umur TEXT NOT NULL,
+          nik INTEGER NOT NULL UNIQUE,
+          umur INTEGER NOT NULL,
           alamat TEXT NOT NULL,
-          kontak TEXT NOT NULL,
+          kontak INTEGER NOT NULL,
           tanggal TEXT NOT NULL,
           gejala TEXT NOT NULL,
           risiko TEXT NOT NULL,
@@ -94,9 +95,19 @@ class DatabaseHelper {
           username TEXT UNIQUE,
           passwordHash TEXT,
           bankAccount TEXT,
-          photoPath TEXT,
+          photoPath TEXT
         )
       ''');
+      await db.execute('''
+    CREATE TABLE withdrawals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      points INTEGER NOT NULL,
+      bankName TEXT NOT NULL,
+      accountNumber TEXT NOT NULL,
+      accountHolderName TEXT NOT NULL,
+      timestamp TEXT NOT NULL
+    )
+  ''');
 
       print('Database tables created successfully');
     } catch (e) {
@@ -246,6 +257,25 @@ class DatabaseHelper {
   Future<int> updateAdmin(int id, Map<String, dynamic> data) async {
     final db = await database;
     return await db.update('admins', data, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Fungsi untuk menyimpan data penarikan baru
+  Future<void> insertWithdrawal(Withdrawal withdrawal) async {
+    final db = await database;
+    await db.insert('withdrawals', withdrawal.toMap());
+  }
+
+  // Fungsi untuk mengambil semua riwayat penarikan
+  Future<List<Withdrawal>> getAllWithdrawals() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'withdrawals',
+      orderBy: 'timestamp DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return Withdrawal.fromMap(maps[i]);
+    });
   }
 
   // Utility methods

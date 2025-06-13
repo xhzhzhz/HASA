@@ -4,10 +4,15 @@ import 'dart:io' show Platform;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'services/db_helper.dart';
 import 'pages/auth_gate.dart';
+import 'services/notification_service.dart';
+import 'services/point_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await initializeDateFormatting('id_ID', null);
+  await NotificationService().init();
+  await PointService().loadDataFromDb();
   if (!kIsWeb) {
     try {
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {

@@ -92,10 +92,10 @@ class _SignUpPageState extends State<SignUpPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _bankController,
-                decoration: const InputDecoration(labelText: 'No. Rekening'),
+                decoration: const InputDecoration(labelText: 'Alamat'),
                 validator: (value) {
                   if (value == null || value.isEmpty)
-                    return 'No. rekening tidak boleh kosong';
+                    return 'Alamat tidak boleh kosong';
                   return null;
                 },
               ),

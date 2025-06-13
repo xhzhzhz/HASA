@@ -56,7 +56,7 @@ class PatientService {
 
       return allPatients.where((patient) {
         return patient.nama.toLowerCase().contains(query.toLowerCase()) ||
-            patient.nik.contains(query) ||
+            patient.nik.toString().contains(query) ||
             patient.alamat.toLowerCase().contains(query.toLowerCase());
       }).toList();
     } catch (e) {

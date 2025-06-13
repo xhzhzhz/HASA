@@ -41,28 +41,41 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_add),
-            label: 'Pasien',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notifikasi',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.card_giftcard),
-            label: 'Reward',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Profil',
-          ),
-        ],
+      bottomNavigationBar: ValueListenableBuilder<List<String>>(
+        valueListenable: pointService.notifications,
+        builder: (context, notificationList, child) {
+          return BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (i) => setState(() => _currentIndex = i),
+            type: BottomNavigationBarType.fixed,
+            items: [
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Beranda',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_add),
+                label: 'Pasien',
+              ),
+              BottomNavigationBarItem(
+                icon: Badge(
+                  label: Text(notificationList.length.toString()),
+                  isLabelVisible: notificationList.isNotEmpty,
+                  child: const Icon(Icons.notifications),
+                ),
+                label: 'Notifikasi',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.card_giftcard),
+                label: 'Reward',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.account_circle),
+                label: 'Profil',
+              ),
+            ],
+          );
+        },
       ),
     );
   }

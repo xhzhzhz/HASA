@@ -17,6 +17,7 @@ class HomePage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
+        automaticallyImplyLeading: false, // Menghilangkan tombol kembali
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -35,37 +36,42 @@ class HomePage extends StatelessWidget {
                   style: const TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                ValueListenableBuilder<int>(
+                  valueListenable: pointService.points,
+                  builder: (context, currentPoints, child) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                              size: 28,
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Poin Anda: $currentPoints',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Poin Anda: ${pointService.points}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Terus periksa pasien untuk menambah poin!',
+                              style: TextStyle(color: Colors.grey),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Terus periksa pasien untuk menambah poin!',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -73,6 +79,8 @@ class HomePage extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
+
+                // ### BAGIAN AKSI CEPAT YANG DITAMBAHKAN ###
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -122,36 +130,44 @@ class HomePage extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                // ### AKHIR BAGIAN AKSI CEPAT ###
                 const SizedBox(height: 24),
                 const Text(
                   'Aktivitas Terakhir',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount:
-                      pointService.notifications.length > 3
-                          ? 3
-                          : pointService.notifications.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: Color(0x152AA89B),
-                          child: Icon(
-                            Icons.check_circle,
-                            color: Color(0xFF2AA89B),
+                ValueListenableBuilder<List<String>>(
+                  valueListenable: pointService.notifications,
+                  builder: (context, notificationList, child) {
+                    if (notificationList.isEmpty) {
+                      return const Card(
+                        child: ListTile(title: Text('Belum ada aktivitas.')),
+                      );
+                    }
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount:
+                          notificationList.length > 3
+                              ? 3
+                              : notificationList.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Color(0x152AA89B),
+                              child: Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF2AA89B),
+                              ),
+                            ),
+                            title: Text(notificationList[index]),
                           ),
-                        ),
-                        title: Text(pointService.notifications[index]),
-                        subtitle: Text(
-                          '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -163,6 +179,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  // ### HELPER METHOD YANG DITAMBAHKAN ###
   Widget _buildQuickAction(
     BuildContext context, {
     required IconData icon,
@@ -173,17 +190,18 @@ class HomePage extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: MediaQuery.of(context).size.width / 4 - 16,
+        // Penyesuaian lebar agar pas untuk 4 item
+        width: (MediaQuery.of(context).size.width / 4) - 20,
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0x152AA89B),
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFF2AA89B).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: const Color(0xFF2AA89B)),
+              child: Icon(icon, color: const Color(0xFF2AA89B), size: 28),
             ),
             const SizedBox(height: 8),
             Text(

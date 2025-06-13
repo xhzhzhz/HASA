@@ -15,175 +15,173 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  // State untuk membedakan antara 'sedang memuat' dan 'gagal memuat'
+  bool _isLoading = true;
   Map<String, dynamic>? _admin;
-  late TextEditingController _bankController;
-  String? _photoPath;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _bankController = TextEditingController();
     _loadAdmin();
   }
 
+  /// Mengambil data admin dari database dan memperbarui state
   Future<void> _loadAdmin() async {
+    // Jika tidak sedang loading, set ke true untuk menampilkan indicator saat refresh
+    if (mounted && !_isLoading) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     final adm = await AuthService().getCurrentAdmin(widget.username);
-    if (adm != null) {
+
+    if (mounted) {
       setState(() {
         _admin = adm;
-        _bankController.text = adm['bankAccount'] ?? '';
-        _photoPath = adm['photoPath'];
+        _isLoading = false; // Matikan loading setelah proses selesai
       });
     }
   }
 
-  Future<void> _pickPhoto() async {
-    final picked = await _picker.pickImage(source: ImageSource.camera);
-    if (picked != null) {
-      setState(() {
-        _photoPath = picked.path;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _bankController.dispose();
-    super.dispose();
-  }
-
+  // Method build utama, sekarang lebih rapi
   @override
   Widget build(BuildContext context) {
-    if (_admin == null) {
+    if (_isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Profil Akun')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil Akun')),
+      appBar: AppBar(
+        title: const Text('Profil Akun'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadAdmin, // Tombol untuk me-refresh data
+            tooltip: 'Refresh Data',
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: const Color(0xFF2AA89B),
-                      backgroundImage:
-                          _photoPath != null
-                              ? FileImage(File(_photoPath!)) as ImageProvider
-                              : null,
-                      child:
-                          _photoPath == null
-                              ? const Icon(
-                                Icons.person,
-                                size: 50,
-                                color: Colors.white,
-                              )
-                              : null,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _admin!['username'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(_admin!['bankAccount'] ?? ''),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showEditDialog(context),
-                        icon: const Icon(Icons.edit, color: Colors.white),
-                        label: const Text(
-                          'Edit Profil',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2AA89B),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildProfileCard(),
             const SizedBox(height: 24),
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.notifications,
-                    title: 'Pengaturan Notifikasi',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.help,
-                    title: 'Bantuan',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.info,
-                    title: 'Tentang Aplikasi',
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
+            _buildMenuItems(),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: widget.onLogout,
-                icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
+            _buildLogoutButton(),
             const SizedBox(height: 24),
-            const Text('HASA Beta', style: TextStyle(color: Colors.grey)),
+            const Text('HASA Beta v1.0', style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuItem(
-    BuildContext context, {
+  /// Method untuk membangun kartu profil utama
+  Widget _buildProfileCard() {
+    final photoPath = _admin!['photoPath'];
+    final imageExists =
+        photoPath != null &&
+        photoPath.isNotEmpty &&
+        File(photoPath).existsSync();
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: const Color(0xFF2AA89B),
+              backgroundImage: imageExists ? FileImage(File(photoPath!)) : null,
+              child:
+                  !imageExists
+                      ? const Icon(Icons.person, size: 50, color: Colors.white)
+                      : null,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _admin!['username'] ?? 'Nama Pengguna',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(_admin!['bankAccount'] ?? 'alamat belum diatur'),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _showEditDialog,
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit Profil'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Method untuk membangun menu-menu di bawah profil
+  Widget _buildMenuItems() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Column(
+        children: [
+          _buildMenuItem(
+            icon: Icons.notifications,
+            title: 'Pengaturan Notifikasi',
+            onTap: () {},
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _buildMenuItem(icon: Icons.help, title: 'Bantuan', onTap: () {}),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _buildMenuItem(
+            icon: Icons.info,
+            title: 'Tentang Aplikasi',
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Method untuk membangun tombol logout
+  Widget _buildLogoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: widget.onLogout,
+        icon: const Icon(Icons.logout),
+        label: const Text('Logout'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  /// Method untuk membangun satu item menu
+  Widget _buildMenuItem({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
   }) {
+    // ... (kode ini tidak berubah dan sudah benar)
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
             Icon(icon, color: const Color(0xFF2AA89B)),
@@ -196,68 +194,124 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
+  /// Method untuk menampilkan dialog edit profil
+  void _showEditDialog() {
+    final usernameCtrl = TextEditingController(text: _admin!['username']);
+    final bankCtrl = TextEditingController(text: _admin!['bankAccount']);
+    String? tempPhotoPath = _admin!['photoPath'];
+
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Edit Profil'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  initialValue: _admin!['username'],
-                  decoration: const InputDecoration(labelText: 'Username'),
-                  onChanged: (v) => _admin!['username'] = v,
-                ),
-                TextFormField(
-                  controller: _bankController,
-                  decoration: const InputDecoration(labelText: 'No. Rekening'),
-                ),
-                const SizedBox(height: 8),
-                Row(
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit Profil'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ElevatedButton(
-                      onPressed: _pickPhoto,
-                      child: const Text('Ganti Foto'),
+                    TextFormField(
+                      controller: usernameCtrl,
+                      decoration: const InputDecoration(labelText: 'Username'),
                     ),
-                    const SizedBox(width: 10),
-                    if (_photoPath != null)
-                      Image.file(File(_photoPath!), width: 50, height: 50),
+                    TextFormField(
+                      controller: bankCtrl,
+                      decoration: const InputDecoration(labelText: 'alamat'),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            final picked = await _picker.pickImage(
+                              source: ImageSource.camera,
+                              maxWidth: 600,
+                              imageQuality: 70,
+                            );
+                            if (picked != null) {
+                              setDialogState(() => tempPhotoPath = picked.path);
+                            }
+                          },
+                          child: const Text('Ganti Foto'),
+                        ),
+                        const SizedBox(width: 10),
+                        if (tempPhotoPath != null &&
+                            File(tempPhotoPath!).existsSync())
+                          Image.file(
+                            File(tempPhotoPath!),
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          )
+                        else
+                          const Icon(Icons.photo, size: 50, color: Colors.grey),
+                      ],
+                    ),
                   ],
                 ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final newUsername = usernameCtrl.text;
+                    final isUsernameChanged =
+                        newUsername != _admin!['username'];
+
+                    final success = await AuthService().updateProfile(
+                      id: _admin!['id'],
+                      username: newUsername,
+                      bankAccount: bankCtrl.text,
+                      photoPath: tempPhotoPath,
+                    );
+
+                    if (!mounted) return;
+                    Navigator.pop(dialogContext);
+
+                    if (success) {
+                      if (isUsernameChanged) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Username diubah, silakan login kembali.',
+                            ),
+                            backgroundColor: Colors.blue,
+                          ),
+                        );
+                        widget.onLogout();
+                      } else {
+                        await _loadAdmin();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Profil berhasil diperbarui'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Gagal memperbarui profil'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
               ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final success = await AuthService().updateProfile(
-                    id: _admin!['id'],
-                    username: _admin!['username'],
-                    bankAccount: _bankController.text,
-                    photoPath: _photoPath,
-                  );
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'Profil berhasil diperbarui'
-                            : 'Gagal memperbarui profil',
-                      ),
-                      backgroundColor: success ? Colors.green : Colors.red,
-                    ),
-                  );
-                  if (success) setState(() {});
-                },
-                child: const Text('Simpan'),
-              ),
-            ],
-          ),
+            );
+          },
+        );
+      },
     );
   }
 }

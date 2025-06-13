@@ -5,6 +5,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+
+
 android {
     namespace = "com.example.hasa"
     compileSdk = flutter.compileSdkVersion
@@ -17,6 +19,10 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+    compileOptions {
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -37,6 +43,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
 
 flutter {

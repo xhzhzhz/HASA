@@ -59,7 +59,7 @@ class _PatientPageState extends State<PatientPage> {
             return patient.nama.toLowerCase().contains(
                   _searchQuery.toLowerCase(),
                 ) ||
-                patient.nik.contains(_searchQuery);
+                patient.nik.toString().contains(_searchQuery);
           }
         }).toList();
 
@@ -238,7 +238,7 @@ class _PatientPageState extends State<PatientPage> {
                     patient.isPemeriksaanSelesai = true;
                     await PatientService().update(patient);
                     _pointService.addPoints(
-                      10,
+                      100,
                       'Pemeriksaan pasien ${patient.nama}',
                     );
                     await _loadPatients();
@@ -262,7 +262,7 @@ class _PatientPageState extends State<PatientPage> {
                                       'Berhasil menambahkan pemeriksaan',
                                     ),
                                     Text(
-                                      '+10 poin (Total: ${_pointService.points} poin)',
+                                      '+100 poin (Total: ${_pointService.points.value} poin)',
                                     ),
                                   ],
                                 ),
@@ -356,11 +356,14 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'NIK',
                             prefixIcon: Icon(Icons.badge),
                           ),
-                          validator:
-                              (v) =>
-                                  v == null || v.isEmpty
-                                      ? 'NIK tidak boleh kosong'
-                                      : null,
+                          maxLength: 16,
+                          keyboardType: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.isEmpty)
+                              return 'NIK tidak boleh kosong';
+                            if (v.length != 16) return 'NIK harus 16 digit';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -369,6 +372,7 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Umur',
                             prefixIcon: Icon(Icons.cake),
                           ),
+                          maxLength: 2,
                           keyboardType: TextInputType.number,
                           validator:
                               (v) =>
@@ -396,6 +400,8 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Kontak Serumah',
                             prefixIcon: Icon(Icons.phone),
                           ),
+                          maxLength: 12,
+                          keyboardType: TextInputType.phone,
                           validator:
                               (v) =>
                                   v == null || v.isEmpty
@@ -485,17 +491,17 @@ class _PatientPageState extends State<PatientPage> {
                         try {
                           final newPatient = Patient(
                             nama: ctrlNama.text,
-                            nik: ctrlNik.text,
-                            umur: ctrlUmur.text,
+                            nik: int.tryParse(ctrlNik.text) ?? 0,
+                            umur: int.tryParse(ctrlUmur.text) ?? 0,
                             alamat: ctrlAlamat.text,
-                            kontak: ctrlKontak.text,
+                            kontak: int.tryParse(ctrlKontak.text) ?? 0,
                             tanggal: tanggal!,
                             gejala: gejala,
                             risiko: risiko,
                           );
                           await PatientService().insert(newPatient);
                           _pointService.addPoints(
-                            10,
+                            100,
                             'Pendaftaran pasien ${ctrlNama.text}',
                           );
                           await _loadPatients();
@@ -520,7 +526,7 @@ class _PatientPageState extends State<PatientPage> {
                                             'Berhasil menambahkan pasien',
                                           ),
                                           Text(
-                                            '+10 poin (Total: ${_pointService.points} poin)',
+                                            '+100 poin (Total: ${_pointService.points.value} poin)',
                                           ),
                                         ],
                                       ),
@@ -564,10 +570,12 @@ class _PatientPageState extends State<PatientPage> {
     // Fungsi ini tidak berubah dari sebelumnya
     final formKey = GlobalKey<FormState>();
     final ctrlNama = TextEditingController(text: patientToEdit.nama);
-    final ctrlNik = TextEditingController(text: patientToEdit.nik);
-    final ctrlUmur = TextEditingController(text: patientToEdit.umur);
+    final ctrlNik = TextEditingController(text: patientToEdit.nik.toString());
+    final ctrlUmur = TextEditingController(text: patientToEdit.umur.toString());
     final ctrlAlamat = TextEditingController(text: patientToEdit.alamat);
-    final ctrlKontak = TextEditingController(text: patientToEdit.kontak);
+    final ctrlKontak = TextEditingController(
+      text: patientToEdit.kontak.toString(),
+    );
     DateTime? tanggal = patientToEdit.tanggal;
     Map<String, bool> gejala = Map.from(patientToEdit.gejala);
     Map<String, bool> risiko = Map.from(patientToEdit.risiko);
@@ -605,11 +613,14 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'NIK',
                             prefixIcon: Icon(Icons.badge),
                           ),
-                          validator:
-                              (v) =>
-                                  v == null || v.isEmpty
-                                      ? 'NIK tidak boleh kosong'
-                                      : null,
+                          maxLength: 16,
+                          keyboardType: TextInputType.number,
+                          validator: (v) {
+                            if (v == null || v.isEmpty)
+                              return 'NIK tidak boleh kosong';
+                            if (v.length != 16) return 'NIK harus 16 digit';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -618,6 +629,7 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Umur',
                             prefixIcon: Icon(Icons.cake),
                           ),
+                          maxLength: 2,
                           keyboardType: TextInputType.number,
                           validator:
                               (v) =>
@@ -645,6 +657,8 @@ class _PatientPageState extends State<PatientPage> {
                             labelText: 'Kontak Serumah',
                             prefixIcon: Icon(Icons.phone),
                           ),
+                          maxLength: 12,
+                          keyboardType: TextInputType.phone,
                           validator:
                               (v) =>
                                   v == null || v.isEmpty
@@ -735,10 +749,10 @@ class _PatientPageState extends State<PatientPage> {
                           final updatedPatient = Patient(
                             id: patientToEdit.id,
                             nama: ctrlNama.text,
-                            nik: ctrlNik.text,
-                            umur: ctrlUmur.text,
+                            nik: int.tryParse(ctrlNik.text) ?? 0,
+                            umur: int.tryParse(ctrlUmur.text) ?? 0,
                             alamat: ctrlAlamat.text,
-                            kontak: ctrlKontak.text,
+                            kontak: int.tryParse(ctrlKontak.text) ?? 0,
                             tanggal: tanggal!,
                             gejala: gejala,
                             risiko: risiko,
@@ -922,9 +936,9 @@ class _PatientPageState extends State<PatientPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _detailItem(Icons.cake, 'Umur', p.umur),
+                        _detailItem(Icons.cake, 'Umur', p.umur.toString()),
                         _detailItem(Icons.home, 'Alamat', p.alamat),
-                        _detailItem(Icons.phone, 'Kontak', p.kontak),
+                        _detailItem(Icons.phone, 'Kontak', p.kontak.toString()),
                         _detailItem(
                           Icons.calendar_today,
                           'Tanggal Investigasi',

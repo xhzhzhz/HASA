@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'sign_up_page.dart';
 
 class SignInPage extends StatefulWidget {
   final ValueChanged<String> onSignIn;
@@ -37,14 +38,12 @@ class _SignInPageState extends State<SignInPage> {
 
     setState(() => _isLoading = false);
 
-    if (success) {
+    if (success && mounted) {
       widget.onSignIn(_emailController.text.trim());
-    } else {
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'User tidak ditemukan. Silakan register terlebih dahulu.',
-          ),
+          content: Text('User tidak ditemukan atau password salah.'),
         ),
       );
     }
@@ -105,13 +104,13 @@ class _SignInPageState extends State<SignInPage> {
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Email / No HP',
+                    labelText: 'Username',
                     prefixIcon: Icon(Icons.person),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Email tidak boleh kosong';
+                      return 'Username tidak boleh kosong';
                     }
                     return null;
                   },
@@ -190,8 +189,15 @@ class _SignInPageState extends State<SignInPage> {
                       style: TextStyle(color: Colors.grey),
                     ),
                     TextButton(
+                      // ### BAGIAN YANG DIPERBAIKI ###
                       onPressed: () {
-                        Navigator.pushNamed(context, '/sign_up');
+                        // Gunakan Navigator.push dengan MaterialPageRoute
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignUpPage(),
+                          ),
+                        );
                       },
                       child: const Text(
                         'Daftar',

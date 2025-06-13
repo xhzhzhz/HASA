@@ -3,10 +3,10 @@ import 'dart:convert';
 class Patient {
   int? id;
   String nama;
-  String nik;
-  String umur;
+  int nik;
+  int umur;
   String alamat;
-  String kontak;
+  int kontak;
   DateTime tanggal;
   Map<String, bool> gejala;
   Map<String, bool> risiko;
@@ -97,10 +97,10 @@ class Patient {
   Patient copyWith({
     int? id,
     String? nama,
-    String? nik,
-    String? umur,
+    int? nik,
+    int? umur,
     String? alamat,
-    String? kontak,
+    int? kontak,
     DateTime? tanggal,
     Map<String, bool>? gejala,
     Map<String, bool>? risiko,
