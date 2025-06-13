@@ -94,7 +94,7 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE,
           passwordHash TEXT,
-          bankAccount TEXT,
+          email TEXT,
           photoPath TEXT
         )
       ''');

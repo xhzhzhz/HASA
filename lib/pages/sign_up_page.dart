@@ -14,7 +14,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _bankController = TextEditingController();
+  final _emailController = TextEditingController();
   String? _photoPath;
   bool _isLoading = false;
 
@@ -32,7 +32,7 @@ class _SignUpPageState extends State<SignUpPage> {
     final registered = await AuthService().register(
       username: _usernameController.text.trim(),
       password: _passwordController.text,
-      bankAccount: _bankController.text,
+      email: _emailController.text,
       photoPath: _photoPath ?? '',
     );
 
@@ -54,7 +54,7 @@ class _SignUpPageState extends State<SignUpPage> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
-    _bankController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -100,7 +100,7 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _bankController,
+                controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {

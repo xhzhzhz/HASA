@@ -40,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (mounted) {
       setState(() {
         _admin = adm;
-        _isLoading = false; // Matikan loading setelah proses selesai
+        _isLoading = false; //
       });
     }
   }
@@ -104,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(_admin!['bankAccount'] ?? 'email belum diatur'),
+            Text(_admin!['email'] ?? 'email belum diatur'),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -168,7 +168,6 @@ class _ProfilePageState extends State<ProfilePage> {
     required String title,
     required VoidCallback onTap,
   }) {
-    // ... (kode ini tidak berubah dan sudah benar)
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -188,8 +187,9 @@ class _ProfilePageState extends State<ProfilePage> {
   /// Method untuk menampilkan dialog edit profil
   void _showEditDialog() {
     final usernameCtrl = TextEditingController(text: _admin!['username']);
-    final bankCtrl = TextEditingController(text: _admin!['bankAccount']);
-    String? tempPhotoPath = _admin!['photoPath'];
+    final emailCtrl = TextEditingController(text: _admin!['email']);
+    // Menggunakan list untuk menyimpan path sementara, memungkinkan perubahan di dalam StatefulBuilder
+    String? currentTempPhotoPath = _admin!['photoPath'];
 
     showDialog(
       context: context,
@@ -207,7 +207,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       decoration: const InputDecoration(labelText: 'Username'),
                     ),
                     TextFormField(
-                      controller: bankCtrl,
+                      controller: emailCtrl,
                       decoration: const InputDecoration(labelText: 'Email'),
                     ),
                     const SizedBox(height: 16),
@@ -221,16 +221,18 @@ class _ProfilePageState extends State<ProfilePage> {
                               imageQuality: 70,
                             );
                             if (picked != null) {
-                              setDialogState(() => tempPhotoPath = picked.path);
+                              setDialogState(() {
+                                currentTempPhotoPath = picked.path;
+                              });
                             }
                           },
                           child: const Text('Ganti Foto'),
                         ),
                         const SizedBox(width: 10),
-                        if (tempPhotoPath != null &&
-                            File(tempPhotoPath!).existsSync())
+                        if (currentTempPhotoPath != null &&
+                            File(currentTempPhotoPath!).existsSync())
                           Image.file(
-                            File(tempPhotoPath!),
+                            File(currentTempPhotoPath!),
                             width: 50,
                             height: 50,
                             fit: BoxFit.cover,
@@ -256,8 +258,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     final success = await AuthService().updateProfile(
                       id: _admin!['id'],
                       username: newUsername,
-                      bankAccount: bankCtrl.text,
-                      photoPath: tempPhotoPath,
+                      email: emailCtrl.text,
+                      photoPath:
+                          currentTempPhotoPath, // Gunakan path yang sudah diperbarui
                     );
 
                     if (!mounted) return;

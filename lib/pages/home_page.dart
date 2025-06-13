@@ -17,7 +17,7 @@ class HomePage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
-        automaticallyImplyLeading: false, // Menghilangkan tombol kembali
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -80,7 +80,6 @@ class HomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // ### BAGIAN AKSI CEPAT YANG DITAMBAHKAN ###
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -131,7 +130,6 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
 
-                // ### AKHIR BAGIAN AKSI CEPAT ###
                 const SizedBox(height: 24),
                 const Text(
                   'Aktivitas Terakhir',
@@ -179,7 +177,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // ### HELPER METHOD YANG DITAMBAHKAN ###
   Widget _buildQuickAction(
     BuildContext context, {
     required IconData icon,

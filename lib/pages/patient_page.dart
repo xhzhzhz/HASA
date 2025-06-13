@@ -47,6 +47,7 @@ class _PatientPageState extends State<PatientPage> {
     super.dispose();
   }
 
+  // DISINI FILTER PASIEN
   @override
   Widget build(BuildContext context) {
     final filteredPatients =
@@ -113,6 +114,8 @@ class _PatientPageState extends State<PatientPage> {
           ),
         ],
       ),
+
+      // DISINI SEARCH CARI PASIEN
       body: Column(
         children: [
           Padding(
@@ -217,6 +220,7 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
+  // DISINI PERIKSA PASIEN
   void _togglePemeriksaan(Patient patient) {
     showDialog(
       context: context,
@@ -292,6 +296,7 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
+  // DISINI INPUT CREATE DATA PASIEN
   void _addPatient() {
     final formKey = GlobalKey<FormState>();
     final ctrlNama = TextEditingController();
@@ -308,6 +313,7 @@ class _PatientPageState extends State<PatientPage> {
         'Demam',
         'Kelenjar',
         'Lesu',
+        'pucat',
       ])
         e: false,
     };
@@ -323,6 +329,7 @@ class _PatientPageState extends State<PatientPage> {
         e: false,
     };
 
+    // DISINI FRONTEND TAMBAH DATA PASIEN
     showDialog(
       context: context,
       builder:
@@ -505,6 +512,7 @@ class _PatientPageState extends State<PatientPage> {
                             'Pendaftaran pasien ${ctrlNama.text}',
                           );
                           await _loadPatients();
+                          // DISINI NOTIF NAMBAH PASIEN BERHASIL
                           Navigator.pop(context);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -566,8 +574,8 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
+  // DISINI EDIT DATA PASIEN
   void _editPatient(Patient patientToEdit) {
-    // Fungsi ini tidak berubah dari sebelumnya
     final formKey = GlobalKey<FormState>();
     final ctrlNama = TextEditingController(text: patientToEdit.nama);
     final ctrlNik = TextEditingController(text: patientToEdit.nik.toString());
@@ -793,9 +801,7 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
-  // ===================================================================
-  // == FUNGSI BARU UNTUK KONFIRMASI HAPUS ==
-  // ===================================================================
+  // DISINI FUNGSI UNTUK KONFIRMASI HAPUS
   void _showDeleteConfirmation(BuildContext detailContext, Patient patient) {
     showDialog(
       context: detailContext,
@@ -817,7 +823,6 @@ class _PatientPageState extends State<PatientPage> {
                 ),
                 onPressed: () async {
                   try {
-                    // Pastikan patient.id tidak null
                     if (patient.id == null) {
                       throw Exception("ID pasien tidak ditemukan.");
                     }
@@ -838,7 +843,6 @@ class _PatientPageState extends State<PatientPage> {
                         ),
                       );
                     }
-                    // Muat ulang daftar pasien
                     await _loadPatients();
                   } catch (e) {
                     if (mounted) {
@@ -859,9 +863,7 @@ class _PatientPageState extends State<PatientPage> {
     );
   }
 
-  // ===================================================================
-  // == FUNGSI _showDetail YANG SUDAH DIMODIFIKASI DENGAN TOMBOL HAPUS ==
-  // ===================================================================
+  // DISINI FUNGSI _showDetail DENGAN TOMBOL HAPUS
   void _showDetail(Patient p) {
     showDialog(
       context: context,
