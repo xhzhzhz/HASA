@@ -84,18 +84,34 @@ class _SignUpPageState extends State<SignUpPage> {
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Password tidak boleh kosong';
+                  } else if (value.length < 8) {
+                    return 'Password minimal 8 karakter';
+                  } else if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                    return 'Password harus mengandung huruf besar';
+                  } else if (!RegExp(r'[a-z]').hasMatch(value)) {
+                    return 'Password harus mengandung huruf kecil';
+                  } else if (!RegExp(r'[0-9]').hasMatch(value)) {
+                    return 'Password harus mengandung angka';
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _bankController,
-                decoration: const InputDecoration(labelText: 'Alamat'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Alamat tidak boleh kosong';
+                  if (value == null || value.isEmpty) {
+                    return 'Email tidak boleh kosong';
+                  }
+                  // Regex sederhana untuk validasi format email
+                  const pattern = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+                  final regex = RegExp(pattern);
+                  if (!regex.hasMatch(value.trim())) {
+                    return 'Format email tidak valid';
+                  }
                   return null;
                 },
               ),

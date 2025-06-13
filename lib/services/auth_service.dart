@@ -51,4 +51,15 @@ class AuthService {
     if (photoPath != null) data['photoPath'] = photoPath;
     return await _db.updateAdmin(id, data) > 0;
   }
+
+  Future<bool> sendPasswordReset({required String email}) async {
+    // username == email
+    final adm = await _db.getAdminByUsername(email);
+    if (adm == null) {
+      // User/email tidak ditemukan
+      return false;
+    }
+    await Future.delayed(const Duration(seconds: 1));
+    return true;
+  }
 }

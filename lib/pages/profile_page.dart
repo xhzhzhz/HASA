@@ -56,16 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil Akun'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadAdmin, // Tombol untuk me-refresh data
-            tooltip: 'Refresh Data',
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Profil Akun')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -113,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(_admin!['bankAccount'] ?? 'alamat belum diatur'),
+            Text(_admin!['bankAccount'] ?? 'email belum diatur'),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -217,7 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     TextFormField(
                       controller: bankCtrl,
-                      decoration: const InputDecoration(labelText: 'alamat'),
+                      decoration: const InputDecoration(labelText: 'Email'),
                     ),
                     const SizedBox(height: 16),
                     Row(

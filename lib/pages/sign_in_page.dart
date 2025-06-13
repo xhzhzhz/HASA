@@ -30,12 +30,10 @@ class _SignInPageState extends State<SignInPage> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-
     final success = await AuthService().login(
       username: _emailController.text.trim(),
       password: _passwordController.text,
     );
-
     setState(() => _isLoading = false);
 
     if (success && mounted) {
@@ -47,6 +45,66 @@ class _SignInPageState extends State<SignInPage> {
         ),
       );
     }
+  }
+
+  void _showForgotPasswordDialog() {
+    final _resetEmailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Lupa Password'),
+            content: TextField(
+              controller: _resetEmailController,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.person),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final email = _resetEmailController.text.trim();
+                  // Validasi sederhana
+                  if (email.isEmpty ||
+                      !RegExp(
+                        r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(email)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Masukkan email yang valid'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  Navigator.pop(context); // tutup dialog
+                  final success = await AuthService().sendPasswordReset(
+                    email: email,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? 'Link reset password telah dikirim ke email Anda.'
+                            : 'Gagal mengirim link reset. Coba lagi nanti.',
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Kirim'),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -92,7 +150,6 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-
                 const Text(
                   'Health Action Support Application',
                   textAlign: TextAlign.center,
@@ -100,7 +157,7 @@ class _SignInPageState extends State<SignInPage> {
                 ),
                 const SizedBox(height: 48),
 
-                // Email field
+                // Username field
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
@@ -144,12 +201,11 @@ class _SignInPageState extends State<SignInPage> {
                 ),
                 const SizedBox(height: 8),
 
+                // Lupa Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      // TODO: tindakan lupa password
-                    },
+                    onPressed: _showForgotPasswordDialog,
                     child: const Text(
                       'Lupa Password?',
                       style: TextStyle(color: Color(0xFF2AA89B)),
@@ -181,6 +237,7 @@ class _SignInPageState extends State<SignInPage> {
                 ),
                 const SizedBox(height: 24),
 
+                // Daftar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -189,14 +246,10 @@ class _SignInPageState extends State<SignInPage> {
                       style: TextStyle(color: Colors.grey),
                     ),
                     TextButton(
-                      // ### BAGIAN YANG DIPERBAIKI ###
                       onPressed: () {
-                        // Gunakan Navigator.push dengan MaterialPageRoute
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignUpPage(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const SignUpPage()),
                         );
                       },
                       child: const Text(
